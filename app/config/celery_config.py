@@ -1,12 +1,11 @@
 # app/config/celery_config.py
-import os
 from celery import Celery
 from kombu import Exchange, Queue
 
 
-# Celery 配置 - 从环境变量读取
-CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", "redis://redis:6379/0")
-CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND", "redis://redis:6379/1")
+# Celery 配置 - 硬编码配置
+CELERY_BROKER_URL = "redis://redis:6379/0"
+CELERY_RESULT_BACKEND = "redis://redis:6379/1"
 
 # 创建 Celery 实例
 celery_app = Celery(

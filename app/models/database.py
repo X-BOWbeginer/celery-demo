@@ -27,6 +27,8 @@ class StartTaskResponse(BaseModel):
     task_id: str
     status: str
     message: str
+    local_task_id: Optional[int] = None  # 本地任务 ID（用于目录管理）
+    task_directory: Optional[str] = None  # 任务目录路径
 
 
 class TaskStatusResponse(BaseModel):
@@ -36,17 +38,3 @@ class TaskStatusResponse(BaseModel):
     result: Optional[dict] = None
     progress: Optional[dict] = None
     error: Optional[str] = None
-
-
-class LongTaskRequest(BaseModel):
-    """长任务请求模型"""
-    duration: int = 20
-    task_name: str = "long_task"
-    
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "duration": 20,
-                "task_name": "long_task"
-            }
-        }

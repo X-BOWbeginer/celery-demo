@@ -6,13 +6,13 @@ from fastapi import FastAPI, HTTPException
 from celery.result import AsyncResult
 
 from app.config.celery_config import celery_app
-from app.tasks.tasks import simulate_work, long_running_task
+from app.tasks.tasks import simulate_work
 from app.models.database import (
     StartTaskRequest,
     StartTaskResponse,
     TaskStatusResponse,
-    LongTaskRequest,
 )
+from app.utils.task_manager import task_manager
 
 app = FastAPI(
     title="Celery Demo API",
@@ -31,7 +31,6 @@ def root():
         "version": "2.0.0",
         "endpoints": {
             "start_task": "POST /tasks",
-            "start_long_task": "POST /tasks/long",
             "get_task_status": "GET /tasks/{task_id}",
             "cancel_task": "DELETE /tasks/{task_id}",
             "health": "GET /health",
@@ -79,7 +78,17 @@ def start_task(req: StartTaskRequest):
         StartTaskResponse: 包含任务 ID 和状态的响应
     """
     try:
-        # 异步调用 Celery 任务
+        # 1. 创建任务目录
+        task_info = task_manager.create_task_directory(task_name=req.task_name)
+        
+        # 2. 保存任务参数到目录
+        params = {
+            "seconds": req.seconds,
+            "task_name": req.task_name,
+        }
+        task_manager.save_task_params(task_info["task_id"], params)
+        
+        # 3. 异步调用 Celery 任务
         task = simulate_work.apply_async(
             args=[req.seconds, req.task_name],
             task_id=None,  # 让 Celery 自动生成 task_id
@@ -88,40 +97,14 @@ def start_task(req: StartTaskRequest):
         return StartTaskResponse(
             task_id=task.id,
             status="PENDING",
-            message=f"Task '{req.task_name}' started successfully"
+            message=f"Task '{req.task_name}' started successfully",
+            local_task_id=task_info["task_id"],
+            task_directory=task_info["directory"]
         )
     except Exception as e:
         raise HTTPException(
             status_code=500,
             detail=f"Failed to start task: {str(e)}"
-        )
-
-
-@app.post("/tasks/long", response_model=StartTaskResponse)
-def start_long_task(req: LongTaskRequest):
-    """
-    启动一个长时间运行的任务
-    
-    Args:
-        req: 长任务请求参数
-    
-    Returns:
-        StartTaskResponse: 包含任务 ID 和状态的响应
-    """
-    try:
-        task = long_running_task.apply_async(
-            args=[req.duration, req.task_name],
-        )
-        
-        return StartTaskResponse(
-            task_id=task.id,
-            status="PENDING",
-            message=f"Long task '{req.task_name}' started successfully"
-        )
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to start long task: {str(e)}"
         )
 
 

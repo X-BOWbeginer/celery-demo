@@ -6,7 +6,6 @@
 
 - **FastAPI**: Web API 框架，提供 RESTful 接口
 - **Celery**: 分布式任务队列，处理异步任务
-- **Redis**: 消息代理（Broker），用于任务队列
 - **Flower**: Celery 监控工具，提供 Web UI
 
 ## 项目结构
@@ -14,7 +13,7 @@
 ### 1. 启动服务
 
 ```bash
-# 构建并启动所有服务
+# 构建并启动所有服务(记得启动docker服务先)
 make build
 make up
 

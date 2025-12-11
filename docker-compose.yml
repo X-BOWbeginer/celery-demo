@@ -23,6 +23,9 @@ services:
       "
     ports:
       - "8000:8000"
+    volumes:
+      # 挂载 simu_service 目录用于任务文件存储
+      - /data/workspace/EDA/schema/KQCircuits/batch_tools/simu_service:/data/simu_service
     depends_on:
       redis:
         condition: service_healthy
@@ -41,6 +44,9 @@ services:
       bash -c "
       celery -A app.config.celery_config.celery_app worker --loglevel=info --concurrency=1
       "
+    volumes:
+      # 挂载 simu_service 目录用于任务文件访问
+      - /data/workspace/EDA/schema/KQCircuits/batch_tools/simu_service:/data/simu_service
     depends_on:
       redis:
         condition: service_healthy
@@ -61,6 +67,8 @@ services:
       "
     ports:
       - "5555:5555"
+    volumes:
+      - flower-data:/data
     depends_on:
       redis:
         condition: service_healthy
@@ -76,3 +84,6 @@ services:
 networks:
   celery-net:
     driver: bridge
+
+volumes:
+  flower-data:
