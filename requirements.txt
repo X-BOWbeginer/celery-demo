@@ -1,0 +1,6 @@
+fastapi
+uvicorn[standard]
+celery[redis]
+flower
+pydantic
+pydantic-settings

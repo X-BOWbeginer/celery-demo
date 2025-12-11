@@ -1,0 +1,78 @@
+services:
+  # Redis - Celery Broker & Result Backend
+  redis:
+    image: redis:7-alpine
+    container_name: celery-redis
+    ports: 
+      - "6379:6379"
+    networks:
+      - celery-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # FastAPI 应用
+  api:
+    build: .
+    container_name: celery-api
+    command: >
+      bash -c "
+      python -m app.api.server
+      "
+    ports:
+      - "8000:8000"
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - celery-net
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/1
+    restart: unless-stopped
+
+  # Celery Worker
+  worker:
+    build: .
+    container_name: celery-worker
+    command: >
+      bash -c "
+      celery -A app.config.celery_config.celery_app worker --loglevel=info --concurrency=1
+      "
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - celery-net
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/1
+    restart: unless-stopped
+
+  # Flower - Celery 监控工具
+  flower:
+    build: .
+    container_name: celery-flower
+    command: >
+      bash -c "
+      celery -A app.config.celery_config.celery_app flower --port=5555
+      "
+    ports:
+      - "5555:5555"
+    depends_on:
+      redis:
+        condition: service_healthy
+      worker:
+        condition: service_started
+    networks:
+      - celery-net
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/1
+    restart: unless-stopped
+
+networks:
+  celery-net:
+    driver: bridge
