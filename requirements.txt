@@ -4,3 +4,4 @@ celery[redis]
 flower
 pydantic
 pydantic-settings
+python-multipart

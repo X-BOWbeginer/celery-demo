@@ -28,6 +28,8 @@ logs:
 restart:
 	sudo docker compose restart
 
+rebuild: down build up
+
 clean:
 	sudo docker compose down -v
 	@echo "已清理所有容器和数据卷"

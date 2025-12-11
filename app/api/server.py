@@ -2,11 +2,11 @@
 """
 FastAPI 应用服务器
 """
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, UploadFile, File, Form
 from celery.result import AsyncResult
 
 from app.config.celery_config import celery_app
-from app.tasks.tasks import simulate_work
+from app.tasks.tasks import simulate_work, GmonCell_batch_simu
 from app.models.database import (
     StartTaskRequest,
     StartTaskResponse,
@@ -17,7 +17,7 @@ from app.utils.task_manager import task_manager
 app = FastAPI(
     title="Celery Demo API",
     description="基于 Celery + FastAPI 的异步任务处理系统",
-    version="2.0.0",
+    version="0.0.1",
 )
 
 
@@ -28,9 +28,10 @@ def root():
     """根路径，返回 API 信息"""
     return {
         "message": "Celery Demo API",
-        "version": "2.0.0",
+        "version": "0.0.1",
         "endpoints": {
             "start_task": "POST /tasks",
+            "start_gmoncell_simu": "POST /tasks/gmoncell-simu",
             "get_task_status": "GET /tasks/{task_id}",
             "cancel_task": "DELETE /tasks/{task_id}",
             "health": "GET /health",
@@ -92,6 +93,7 @@ def start_task(req: StartTaskRequest):
         task = simulate_work.apply_async(
             args=[req.seconds, req.task_name],
             task_id=None,  # 让 Celery 自动生成 task_id
+            local_task_id=task_info["task_id"], # 本地任务 ID,worker 端使用
         )
         
         return StartTaskResponse(
@@ -105,6 +107,56 @@ def start_task(req: StartTaskRequest):
         raise HTTPException(
             status_code=500,
             detail=f"Failed to start task: {str(e)}"
+        )
+
+
+@app.post("/tasks/gmoncell-simu", response_model=StartTaskResponse)
+async def start_gmoncell_simu(
+    file: UploadFile = File(..., description="参数文件（txt格式）"),
+    task_name: str = Form(default="gmoncell_simu", description="任务名称")
+):
+    """
+    启动 GmonCell 批量仿真任务
+    
+    Args:
+        file: 上传的参数文件（txt格式）
+        task_name: 任务名称（可选，默认为 gmoncell_simu）
+    
+    Returns:
+        StartTaskResponse: 包含任务 ID 和状态的响应
+    """
+    try:
+        # 1. 读取上传的文件内容
+        content = await file.read()
+        text_content = content.decode('utf-8')
+        
+        # 2. 创建任务目录
+        task_info = task_manager.create_task_directory(task_name=task_name)
+        
+        # 3. 保存文件内容到 params.txt
+        params_file_path = task_manager.save_text_file(
+            task_info["task_id"], 
+            text_content, 
+            filename="params.txt"
+        )
+        
+        # 4. 异步调用 Celery 任务（暂时保持原有参数，后续会修改任务逻辑）
+        task = GmonCell_batch_simu.apply_async(
+            args=[10, task_name, task_info["task_id"]],  # 将 local_task_id 作为参数传递
+            task_id=None,  # 让 Celery 自动生成 task_id
+        )
+        
+        return StartTaskResponse(
+            task_id=task.id,
+            status="PENDING",
+            message=f"GmonCell batch simulation task '{task_name}' started successfully. Params saved to {params_file_path}",
+            local_task_id=task_info["task_id"],
+            task_directory=task_info["directory"]
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to start GmonCell simulation task: {str(e)}"
         )
 
 

@@ -121,6 +121,28 @@ class TaskDirectoryManager:
         
         return str(params_file)
     
+    def save_text_file(self, task_id: int, content: str, filename: str = "params.txt") -> str:
+        """
+        保存文本内容到任务目录
+        
+        Args:
+            task_id: 任务 ID
+            content: 文本内容
+            filename: 文件名（默认为 params.txt）
+        
+        Returns:
+            str: 文件路径
+        """
+        task_dir = self.get_task_directory(task_id)
+        if not task_dir:
+            raise ValueError(f"Task directory for ID {task_id} does not exist")
+        
+        file_path = task_dir / filename
+        with open(file_path, 'w', encoding='utf-8') as f:
+            f.write(content)
+        
+        return str(file_path)
+    
     def list_tasks(self) -> list:
         """
         列出所有任务
