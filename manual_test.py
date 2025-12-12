@@ -8,7 +8,7 @@ import time
 import json
 from typing import Optional
 
-BASE_URL = "http://21.6.205.138:8000"
+BASE_URL = "http://localhost:8000"
 
  
 def print_json(data):

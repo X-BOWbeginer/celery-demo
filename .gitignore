@@ -65,3 +65,6 @@ dmypy.json
 # Jupyter
 .ipynb_checkpoints/
 *.ipynb
+
+*.cfg
+.*

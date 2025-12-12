@@ -4,7 +4,7 @@ Celery 异步任务模块
 """
 import time
 from celery import Task
-from app.config.celery_config import celery_app
+from app.config.worker_config import celery_app
 
 
 class CallbackTask(Task):

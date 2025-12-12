@@ -23,10 +23,10 @@ make logs
 
 ### 2. 访问服务
 
-- **FastAPI 文档**: http://21.6.205.138:8000/docs
-- **FastAPI ReDoc**: http://21.6.205.138:8000/redoc
-- **Flower 监控**: http://21.6.205.138:5555
-- **API 根路径**: http://21.6.205.138:8000
+- **FastAPI 文档**: http://localhost:8000/docs
+- **FastAPI ReDoc**: http://localhost:8000/redoc
+- **Flower 监控**: http://localhost:5555
+- **API 根路径**: http://localhost:8000
 
 ### 3. 停止服务
 

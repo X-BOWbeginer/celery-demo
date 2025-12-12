@@ -5,7 +5,7 @@ FastAPI 应用服务器
 from fastapi import FastAPI, HTTPException, UploadFile, File, Form
 from celery.result import AsyncResult
 
-from app.config.celery_config import celery_app
+from app.config.worker_config import celery_app
 from app.tasks.tasks import simulate_work, GmonCell_batch_simu
 from app.models.database import (
     StartTaskRequest,

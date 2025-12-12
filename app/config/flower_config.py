@@ -1,15 +1,18 @@
-# app/config/celery_config.py
+# app/config/flower_config.py
+# Flower 监控工具的 Celery 配置文件
+# 用于容器中的 Flower 服务
+
 from celery import Celery
-from kombu import Exchange, Queue
+# from kombu import Exchange, Queue
 
 
-# Celery 配置 - 硬编码配置
+# Celery 配置 - 容器内 Redis 连接
 CELERY_BROKER_URL = "redis://redis:6379/0"
 CELERY_RESULT_BACKEND = "redis://redis:6379/1"
 
 # 创建 Celery 实例
 celery_app = Celery(
-    "worker",
+    "flower",
     broker=CELERY_BROKER_URL,
     backend=CELERY_RESULT_BACKEND,
 )

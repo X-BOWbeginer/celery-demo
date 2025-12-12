@@ -36,26 +36,7 @@ services:
       - CELERY_RESULT_BACKEND=redis://redis:6379/1
     restart: unless-stopped
 
-  # Celery Worker
-  worker:
-    build: .
-    container_name: celery-worker
-    command: >
-      bash -c "
-      celery -A app.config.celery_config.celery_app worker --loglevel=info --concurrency=1
-      "
-    volumes:
-      # 挂载 simu_service 目录用于任务文件访问
-      - /data/workspace/EDA/schema/KQCircuits/batch_tools/simu_service:/data/simu_service
-    depends_on:
-      redis:
-        condition: service_healthy
-    networks:
-      - celery-net
-    environment:
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://redis:6379/1
-    restart: unless-stopped
+  # 注意: Worker 已移至主机运行，不再作为容器服务
 
   # Flower - Celery 监控工具
   flower:
@@ -72,8 +53,6 @@ services:
     depends_on:
       redis:
         condition: service_healthy
-      worker:
-        condition: service_started
     networks:
       - celery-net
     environment:
