@@ -6,7 +6,7 @@ from fastapi import FastAPI, HTTPException, UploadFile, File, Form
 from celery.result import AsyncResult
 
 from app.config.worker_config import celery_app
-from app.tasks.tasks import simulate_work, GmonCell_batch_simu
+from app.tasks.tasks import GmonCell_batch_simu
 from app.models.database import (
     StartTaskRequest,
     StartTaskResponse,
@@ -67,47 +67,7 @@ def health_check():
         )
 
 
-@app.post("/tasks", response_model=StartTaskResponse)
-def start_task(req: StartTaskRequest):
-    """
-    启动一个新的异步任务
-    
-    Args:
-        req: 任务请求参数
-    
-    Returns:
-        StartTaskResponse: 包含任务 ID 和状态的响应
-    """
-    try:
-        # 1. 创建任务目录
-        task_info = task_manager.create_task_directory(task_name=req.task_name)
-        
-        # 2. 保存任务参数到目录
-        params = {
-            "seconds": req.seconds,
-            "task_name": req.task_name,
-        }
-        task_manager.save_task_params(task_info["task_id"], params)
-        
-        # 3. 异步调用 Celery 任务
-        task = simulate_work.apply_async(
-            args=[req.seconds, req.task_name],
-            task_id=None,  # 让 Celery 自动生成 task_id
-            local_task_id=task_info["task_id"], # 本地任务 ID,worker 端使用
-        )
-        
-        return StartTaskResponse(
-            task_id=task.id,
-            status="PENDING",
-            message=f"Task '{req.task_name}' started successfully",
-            local_task_id=task_info["task_id"],
-            task_directory=task_info["directory"]
-        )
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to start task: {str(e)}"
-        )
+
 
 
 @app.post("/tasks/gmoncell-simu", response_model=StartTaskResponse)
