@@ -24,8 +24,9 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      # 挂载 simu_service 目录用于任务文件存储
-      - /data/workspace/EDA/schema/KQCircuits/batch_tools/simu_service:/data/simu_service
+      # 将宿主机（Windows）上的目录映射到容器内的 /root/code/simu_service
+      # 在 WSL 中，Windows 的 C: 驱动器路径通常挂载在 /mnt/c
+      - /mnt/c/Users/qlab/Desktop/KQCircuits/batch_tools/simu_service:/root/code/simu_service
     depends_on:
       redis:
         condition: service_healthy
@@ -44,7 +45,7 @@ services:
     container_name: celery-flower
     command: >
       bash -c "
-      celery -A app.config.celery_config.celery_app flower --port=5555
+      celery -A app.config.flower_config.celery_app flower --port=5555
       "
     ports:
       - "5555:5555"

@@ -12,7 +12,7 @@ from datetime import datetime
 class TaskDirectoryManager:
     """任务目录管理器"""
     
-    def __init__(self, base_path: str = "/data/simu_service/tasks"):
+    def __init__(self, base_path: str = "/root/code/simu_service/tasks"):
         """
         初始化任务目录管理器
         

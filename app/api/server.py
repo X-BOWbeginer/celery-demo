@@ -30,7 +30,6 @@ def root():
         "message": "Celery Demo API",
         "version": "0.0.1",
         "endpoints": {
-            "start_task": "POST /tasks",
             "start_gmoncell_simu": "POST /tasks/gmoncell-simu",
             "get_task_status": "GET /tasks/{task_id}",
             "cancel_task": "DELETE /tasks/{task_id}",

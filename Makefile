@@ -78,7 +78,7 @@ worker-start:
 		exit 1; \
 	fi
 	@echo "启动主机 Worker..."
-	@cd /data/workspace/celery-demo && \
+	@cd $(CURDIR) && \
 		$(VENV_CELERY) -A app.config.worker_config.celery_app worker \
 		--loglevel=info \
 		--concurrency=1 \

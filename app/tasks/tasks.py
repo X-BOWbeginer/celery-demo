@@ -3,6 +3,7 @@
 Celery 异步任务模块
 """
 import time
+import subprocess
 from celery import Task
 from app.config.worker_config import celery_app
 
@@ -54,7 +55,15 @@ def GmonCell_batch_simu(self, seconds: int, task_name: str = "GmonCell_batch_sim
                 "percentage": round((i + 1) / seconds * 100, 2),
             }
         )
-    
+
+    # 尝试在 Windows 上启动 notepad.exe 以验证从 API 能调用 Windows 可执行文件（在 WSL 环境下有效）
+    try:
+        # WSL 中可通过 /mnt/c/... 路径调用 Windows 可执行文件
+        subprocess.Popen(["/mnt/c/Windows/System32/notepad.exe"])
+        logs.append("Opened Windows notepad (attempted via /mnt/c/...)")
+    except Exception as e:
+        logs.append(f"Could not open Windows notepad: {e}")
+
     return {
         "task": task_name,
         "seconds": seconds,
@@ -62,3 +71,4 @@ def GmonCell_batch_simu(self, seconds: int, task_name: str = "GmonCell_batch_sim
         "message": "Task completed successfully",
         "local_task_id": local_task_id,
     }
+
