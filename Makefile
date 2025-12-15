@@ -56,8 +56,6 @@ clean:
 	sudo docker compose down -v
 	@echo "已清理所有容器和数据卷"
 
-test:
-	python test_api.py
 
 # ========================================
 # 主机 Worker 管理命令
