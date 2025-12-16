@@ -25,15 +25,14 @@ class CallbackTask(Task):
 
 
 @celery_app.task(bind=True, base=CallbackTask, name="tasks.GmonCell_batch_simu")
-def GmonCell_batch_simu(self, seconds: int, task_name: str = "GmonCell_batch_simu",local_task_id: str = None):
+def GmonCell_batch_simu(self, seconds: int, task_name: str = "GmonCell_batch_simu"):
     """
     GmonCell 批量仿真任务
     
     Args:
         self: Celery task 实例（bind=True 时自动注入）
         seconds: 任务执行秒数
-        task_name: 任务名称
-        local_task_id: 本地任务ID
+        task_name: 任务名称（也作为 task_id）
     
     Returns:
         dict: 包含任务执行结果的字典
@@ -66,9 +65,9 @@ def GmonCell_batch_simu(self, seconds: int, task_name: str = "GmonCell_batch_sim
 
     return {
         "task": task_name,
+        "task_id": self.request.id,  # Celery task_id（就是 task_name）
         "seconds": seconds,
         "logs": logs,
         "message": "Task completed successfully",
-        "local_task_id": local_task_id,
     }
 

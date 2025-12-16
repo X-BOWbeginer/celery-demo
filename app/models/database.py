@@ -27,7 +27,6 @@ class StartTaskResponse(BaseModel):
     task_id: str
     status: str
     message: str
-    local_task_id: Optional[int] = None  # 本地任务 ID（用于目录管理）
     task_directory: Optional[str] = None  # 任务目录路径
 
 

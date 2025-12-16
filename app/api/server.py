@@ -23,14 +23,14 @@ app = FastAPI(
 
 # ==================== API 端点 ====================
 
-@app.get("/")
+@app.get("/interface/list")
 def root():
     """根路径，返回 API 信息"""
     return {
         "message": "Celery Demo API",
         "version": "0.0.1",
         "endpoints": {
-            "start_gmoncell_simu": "POST /tasks/gmoncell-simu",
+            "submit_task": "POST /tasks/submit",
             "get_task_status": "GET /tasks/{task_id}",
             "cancel_task": "DELETE /tasks/{task_id}",
             "health": "GET /health",
@@ -50,13 +50,13 @@ def health_check():
         if stats:
             return {
                 "status": "healthy",
-                "celery": "connected",
+                "scheduler": "connected",
                 "workers": len(stats),
             }
         else:
             return {
                 "status": "degraded",
-                "celery": "no workers available",
+                "scheduler": "no workers available",
                 "workers": 0,
             }
     except Exception as e:
@@ -69,17 +69,17 @@ def health_check():
 
 
 
-@app.post("/tasks/gmoncell-simu", response_model=StartTaskResponse)
-async def start_gmoncell_simu(
+@app.post("/tasks/submit", response_model=StartTaskResponse)
+async def submit_task(
     file: UploadFile = File(..., description="参数文件（txt格式）"),
-    task_name: str = Form(default="gmoncell_simu", description="任务名称")
+    task_name: str = Form(..., description="任务名称，唯一标志")
 ):
     """
     启动 GmonCell 批量仿真任务
     
     Args:
         file: 上传的参数文件（txt格式）
-        task_name: 任务名称（可选，默认为 gmoncell_simu）
+        task_name: 任务名称（必填，作为唯一标识符）
     
     Returns:
         StartTaskResponse: 包含任务 ID 和状态的响应
@@ -89,33 +89,33 @@ async def start_gmoncell_simu(
         content = await file.read()
         text_content = content.decode('utf-8')
         
-        # 2. 创建任务目录
+        # 2. 创建任务目录（直接使用 task_name 作为目录名）
         task_info = task_manager.create_task_directory(task_name=task_name)
         
         # 3. 保存文件内容到 params.txt
         params_file_path = task_manager.save_text_file(
-            task_info["task_id"], 
+            task_name, 
             text_content, 
             filename="params.txt"
         )
         
-        # 4. 异步调用 Celery 任务（暂时保持原有参数，后续会修改任务逻辑）
+        # 4. 使用 task_name 作为 Celery 的 task_id，让 Celery 自己处理重复
         task = GmonCell_batch_simu.apply_async(
-            args=[10, task_name, task_info["task_id"]],  # 将 local_task_id 作为参数传递
-            task_id=None,  # 让 Celery 自动生成 task_id
+            args=[10, task_name],
+            task_id=task_name,
         )
         
         return StartTaskResponse(
-            task_id=task.id,
+            task_id=task.id,  # task.id 就是 task_name
             status="PENDING",
-            message=f"GmonCell batch simulation task '{task_name}' started successfully. Params saved to {params_file_path}",
-            local_task_id=task_info["task_id"],
+            message=f"Task '{task_name}' started successfully",
             task_directory=task_info["directory"]
         )
+        
     except Exception as e:
         raise HTTPException(
             status_code=500,
-            detail=f"Failed to start GmonCell simulation task: {str(e)}"
+            detail=f"Failed to start task: {str(e)}"
         )
 
 
