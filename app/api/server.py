@@ -85,6 +85,15 @@ async def submit_task(
         StartTaskResponse: 包含任务 ID 和状态的响应
     """
     try:
+        # 0. 先用 AsyncResult 简单判断是否重复（只保留此段）
+        existing = AsyncResult(task_name, app=celery_app)
+        # 如果后端有明确状态（非 PENDING），视为已存在
+        if existing.state and existing.state != "PENDING":
+            raise HTTPException(
+                status_code=409,
+                detail=f"Task '{task_name}' already exists with state {existing.state}"
+            )
+
         # 1. 读取上传的文件内容
         content = await file.read()
         text_content = content.decode('utf-8')
