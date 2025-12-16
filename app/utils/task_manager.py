@@ -7,6 +7,7 @@ import json
 from pathlib import Path
 from typing import Optional
 from datetime import datetime
+import shutil
 
 
 class TaskDirectoryManager:
@@ -126,6 +127,26 @@ class TaskDirectoryManager:
                     with open(metadata_file, 'r') as f:
                         tasks.append(json.load(f))
         return tasks
+
+    def clear_all_tasks(self) -> int:
+        """
+        清空 base_path 下的所有任务目录和文件。
+
+        Returns:
+            int: 被删除的顶级任务目录数量（不包括文件）。
+        """
+        removed_count = 0
+        for child in list(self.base_path.iterdir()):
+            try:
+                if child.is_dir():
+                    shutil.rmtree(child)
+                    removed_count += 1
+                else:
+                    child.unlink()
+            except Exception:
+                # 忽略单个文件/目录删除失败，继续清理其余项
+                continue
+        return removed_count
 
 
 # 创建全局实例

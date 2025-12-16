@@ -21,6 +21,16 @@ app = FastAPI(
 )
 
 
+@app.on_event("startup")
+def clear_tasks_on_startup():
+    """在 API 启动时清空 tasks 目录（由 task_manager 管理）。"""
+    try:
+        removed = task_manager.clear_all_tasks()
+        print(f"Startup: cleared {removed} task directories")
+    except Exception as e:
+        print(f"Startup cleanup failed: {e}")
+
+
 # ==================== API 端点 ====================
 
 @app.get("/interface/list")
