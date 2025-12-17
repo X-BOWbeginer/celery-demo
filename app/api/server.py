@@ -41,10 +41,10 @@ def root():
         "version": "0.0.1",
         "endpoints": {
             "submit_task": "POST /tasks/submit",
-            "get_task_status": "GET /tasks/{task_id}",
-            "cancel_task": "DELETE /tasks/{task_id}",
+            "get_task_status": "GET /tasks/query/{task_id}",
+            "cancel_task": "DELETE /tasks/cancel/{task_id}",
             "health": "GET /health",
-            "workers": "GET /workers",
+            "workers": "GET /workstation",
         }
     }
 
@@ -111,7 +111,7 @@ async def submit_task(
         text_content = content.decode('utf-8')
         
         # 2. 创建任务目录（直接使用 task_id 作为目录名）
-        task_info = task_manager.create_task_directory(task_id=task_id)
+        task_info = task_manager.create_task_directory(task_name=task_id)
         
         # 3. 保存文件内容到 params.txt
         params_file_path = task_manager.save_text_file(
@@ -140,7 +140,7 @@ async def submit_task(
         )
 
 
-@app.get("/tasks/{task_id}", response_model=TaskStatusResponse)
+@app.get("/tasks/query/{task_id}", response_model=TaskStatusResponse)
 def get_task_status(task_id: str):
     """
     获取任务状态
@@ -193,7 +193,7 @@ def get_task_status(task_id: str):
         )
 
 
-@app.delete("/tasks/{task_id}")
+@app.delete("/tasks/cancel/{task_id}")
 def cancel_task(task_id: str):
     """
     取消一个正在运行的任务
@@ -230,7 +230,7 @@ def cancel_task(task_id: str):
         )
 
 
-@app.get("/workers")
+@app.get("/workstation")
 def get_workers():
     """
     获取当前活跃的 worker 信息
