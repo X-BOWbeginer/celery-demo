@@ -81,53 +81,55 @@ def health_check():
 
 @app.post("/tasks/submit", response_model=StartTaskResponse)
 async def submit_task(
-    file: UploadFile = File(..., description="参数文件（txt格式）"),
-    task_name: str = Form(..., description="任务名称，唯一标志")
+    task_id: str = Form(..., description="任务id，唯一标志"),
+    params: UploadFile = File(..., description="参数文件（txt格式）"),
+    simu_prototype: str = Form(..., description="gmoncell-simu")
 ):
     """
     启动 GmonCell 批量仿真任务
     
     Args:
-        file: 上传的参数文件（txt格式）
-        task_name: 任务名称（必填，作为唯一标识符）
+        task_id: 任务名称（必填，作为唯一标识符）
+        params: 上传的参数文件（txt格式）
+        simu_prototype: 仿真原型，值为 gmoncell-simu
     
     Returns:
         StartTaskResponse: 包含任务 ID 和状态的响应
     """
     try:
         # 0. 先用 AsyncResult 简单判断是否重复（只保留此段）
-        existing = AsyncResult(task_name, app=celery_app)
+        existing = AsyncResult(task_id, app=celery_app)
         # 如果后端有明确状态（非 PENDING），视为已存在
         if existing.state and existing.state != "PENDING":
             raise HTTPException(
                 status_code=409,
-                detail=f"Task '{task_name}' already exists with state {existing.state}"
+                detail=f"Task '{task_id}' already exists with state {existing.state}"
             )
 
         # 1. 读取上传的文件内容
-        content = await file.read()
+        content = await params.read()
         text_content = content.decode('utf-8')
         
-        # 2. 创建任务目录（直接使用 task_name 作为目录名）
-        task_info = task_manager.create_task_directory(task_name=task_name)
+        # 2. 创建任务目录（直接使用 task_id 作为目录名）
+        task_info = task_manager.create_task_directory(task_id=task_id)
         
         # 3. 保存文件内容到 params.txt
         params_file_path = task_manager.save_text_file(
-            task_name, 
+            task_id, 
             text_content, 
             filename="params.txt"
         )
         
-        # 4. 使用 task_name 作为 Celery 的 task_id，让 Celery 自己处理重复
+        # 4. 使用 task_id 作为 Celery 的 task_id，让 Celery 自己处理重复
         task = GmonCell_batch_simu.apply_async(
-            args=[10, task_name],
-            task_id=task_name,
+            args=[10, task_id],
+            task_id=task_id,
         )
         
         return StartTaskResponse(
-            task_id=task.id,  # task.id 就是 task_name
+            task_id=task.id,  # task.id 就是 task_id
             status="PENDING",
-            message=f"Task '{task_name}' started successfully",
+            message=f"Task '{task_id}' started successfully",
             task_directory=task_info["directory"]
         )
         
