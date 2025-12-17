@@ -78,13 +78,19 @@ worker-start:
 		exit 1; \
 	fi
 	@echo "启动主机 Worker..."
-	@cd $(CURDIR) && \
+		@cd $(CURDIR) && \
 		$(VENV_CELERY) -A app.config.worker_config.celery_app worker \
 		--loglevel=info \
-		--concurrency=1 \
 		--pidfile=$(WORKER_PID_FILE) \
 		--logfile=$(WORKER_LOG_FILE) \
 		--detach
+# 	@cd $(CURDIR) && \
+# 		$(VENV_CELERY) -A app.config.worker_config.celery_app worker \
+# 		--loglevel=info \
+# 		--concurrency=1 \
+# 		--pidfile=$(WORKER_PID_FILE) \
+# 		--logfile=$(WORKER_LOG_FILE) \
+# 		--detach
 	@echo "主机 Worker 已启动！"
 	@echo "PID 文件: $(WORKER_PID_FILE)"
 	@echo "日志文件: $(WORKER_LOG_FILE)"
