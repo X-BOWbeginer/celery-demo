@@ -2,6 +2,7 @@
 """
 FastAPI 应用服务器
 """
+from typing import Literal
 from fastapi import FastAPI, HTTPException, UploadFile, File, Form
 from celery.result import AsyncResult
 
@@ -83,7 +84,7 @@ def health_check():
 async def submit_task(
     task_id: str = Form(..., description="任务id，唯一标志"),
     params: UploadFile = File(..., description="参数文件（txt格式）"),
-    simu_prototype: str = Form(..., description="gmoncell-simu")
+    simu_prototype: Literal["gmoncell-simu"] = Form(..., description="仿真原型，目前只能为 gmoncell-simu")
 ):
     """
     启动 GmonCell 批量仿真任务
