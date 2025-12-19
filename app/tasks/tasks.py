@@ -55,13 +55,17 @@ def GmonCell_batch_simu(self, seconds: int, task_name: str = "GmonCell_batch_sim
             }
         )
 
-    # 尝试在 Windows 上启动 notepad.exe 以验证从 API 能调用 Windows 可执行文件（在 WSL 环境下有效）
+    # 直接通过 WSL 挂载路径运行 Ansys 可执行并等待其退出（与之前 notepad 的调用方式一致）
     try:
-        # WSL 中可通过 /mnt/c/... 路径调用 Windows 可执行文件
-        subprocess.Popen(["/mnt/c/Windows/System32/notepad.exe"])
-        logs.append("Opened Windows notepad (attempted via /mnt/c/...)")
+        win_exe = "/mnt/c/Program Files/AnsysEM/v241/Win64/ansysedt.exe"
+        proc = subprocess.run([win_exe], capture_output=True, text=True, check=False)
+        logs.append(f"Ran Ansys executable, returncode={proc.returncode}")
+        if proc.stdout:
+            logs.append(f"stdout: {proc.stdout}")
+        if proc.stderr:
+            logs.append(f"stderr: {proc.stderr}")
     except Exception as e:
-        logs.append(f"Could not open Windows notepad: {e}")
+        logs.append(f"Could not run Ansys executable: {e}")
 
     return {
         "task": task_name,
