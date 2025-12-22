@@ -5,10 +5,11 @@
 from celery import Celery
 # from kombu import Exchange, Queue
 
-# 主机访问容器 Redis 的配置
-# 使用 localhost 或主机 IP 访问容器暴露的 Redis 端口
-CELERY_BROKER_URL = "redis://localhost:6379/0"
-CELERY_RESULT_BACKEND = "redis://localhost:6379/1"
+from app.config.settings import settings
+
+# 从配置文件获取 Redis 连接配置
+CELERY_BROKER_URL = settings.celery_broker_url
+CELERY_RESULT_BACKEND = settings.celery_result_backend
 
 # 创建 Celery 实例
 celery_app = Celery(

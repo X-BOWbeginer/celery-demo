@@ -24,17 +24,15 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      # 将宿主机（Windows）上的目录映射到容器内的 /root/code/simu_service
+      # 将宿主机（Windows）上的目录映射到容器内
       # 在 WSL 中，Windows 的 C: 驱动器路径通常挂载在 /mnt/c
-      - /mnt/c/Users/qlab/Desktop/KQCircuits/batch_tools/simu_service:/root/code/simu_service
+      # 配置文件路径: Windows 桌面的 KQCircuits/batch_service/config.json
+      - /mnt/c/Users/qlab/Desktop/KQCircuits/batch_service:/mnt/c/Users/qlab/Desktop/KQCircuits/batch_service
     depends_on:
       redis:
         condition: service_healthy
     networks:
       - celery-net
-    environment:
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://redis:6379/1
     restart: unless-stopped
 
   # 注意: Worker 已移至主机运行，不再作为容器服务
@@ -56,9 +54,6 @@ services:
         condition: service_healthy
     networks:
       - celery-net
-    environment:
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://redis:6379/1
     restart: unless-stopped
 
 networks:

@@ -6,6 +6,7 @@ import time
 import subprocess
 from celery import Task
 from app.config.worker_config import celery_app
+from app.config.settings import settings
 
 
 class CallbackTask(Task):
@@ -57,7 +58,8 @@ def GmonCell_batch_simu(self, seconds: int, task_name: str = "GmonCell_batch_sim
 
     # 直接通过 WSL 挂载路径运行 Ansys 可执行并等待其退出（与之前 notepad 的调用方式一致）
     try:
-        win_exe = "/mnt/c/Program Files/AnsysEM/v241/Win64/ansysedt.exe"
+        # 从配置文件获取 HFSS 路径（自动转换为 WSL 格式）
+        win_exe = settings.hfss_path_wsl
         proc = subprocess.run([win_exe], capture_output=True, text=True, check=False)
         logs.append(f"Ran Ansys executable, returncode={proc.returncode}")
         if proc.stdout:

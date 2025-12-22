@@ -9,17 +9,22 @@ from typing import Optional
 from datetime import datetime
 import shutil
 
+from app.config.settings import settings
+
 
 class TaskDirectoryManager:
     """任务目录管理器"""
     
-    def __init__(self, base_path: str = "/root/code/simu_service/tasks"):
+    def __init__(self, base_path: str = None):
         """
         初始化任务目录管理器
         
         Args:
-            base_path: 任务目录的基础路径
+            base_path: 任务目录的基础路径，默认从配置文件读取（WSL格式）
         """
+        # 如果未指定路径，则从配置文件读取（使用 WSL 格式路径）
+        if base_path is None:
+            base_path = settings.tasks_dir_wsl
         self.base_path = Path(base_path)
         
         # 确保基础目录存在
