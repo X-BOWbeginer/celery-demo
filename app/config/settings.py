@@ -129,6 +129,40 @@ class Settings:
         """获取 HFSS 可执行文件路径（WSL 格式）"""
         return self.windows_to_wsl_path(self.hfss_path)
     
+    # ==================== 批处理脚本配置（写死） ====================
+    
+    # Windows Python 路径（写死）
+    WINDOWS_PYTHON_PATH = "C:\\Python39\\python.exe"
+    
+    # 批处理脚本目录（Windows 格式，写死）
+    BATCH_SCRIPT_DIR = "C:\\Users\\qlab\\Desktop\\KQCircuits\\batch_service\\batch_simu_script"
+    
+    @property
+    def windows_python_wsl(self) -> str:
+        """获取 Windows Python 路径（WSL 格式）"""
+        return self.windows_to_wsl_path(self.WINDOWS_PYTHON_PATH)
+    
+    @property
+    def batch_script_dir_wsl(self) -> str:
+        """获取批处理脚本目录（WSL 格式）"""
+        return self.windows_to_wsl_path(self.BATCH_SCRIPT_DIR)
+    
+    def get_batch_script_path(self, script_name: str, wsl_format: bool = True) -> str:
+        """
+        获取批处理脚本完整路径
+        
+        Args:
+            script_name: 脚本文件名，如 "GmonCell_batch_simu_gds_to_target.py"
+            wsl_format: 是否返回 WSL 格式路径
+        
+        Returns:
+            str: 脚本完整路径
+        """
+        if wsl_format:
+            return f"{self.batch_script_dir_wsl}/{script_name}"
+        else:
+            return f"{self.BATCH_SCRIPT_DIR}\\{script_name}"
+    
     @property
     def gds_dir_path(self) -> str:
         """获取 GDS 目录路径"""

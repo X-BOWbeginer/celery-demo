@@ -26,23 +26,23 @@ class CallbackTask(Task):
 
 
 @celery_app.task(bind=True, base=CallbackTask, name="tasks.GmonCell_batch_simu")
-def GmonCell_batch_simu(self, seconds: int, task_name: str = "GmonCell_batch_simu"):
+def GmonCell_batch_simu(self, seconds: int):
     """
     GmonCell 批量仿真任务
     
     Args:
         self: Celery task 实例（bind=True 时自动注入）
         seconds: 任务执行秒数
-        task_name: 任务名称（也作为 task_id）
     
     Returns:
         dict: 包含任务执行结果的字典
     """
+    task_id = self.request.id
     logs = []
     
     for i in range(seconds):
         time.sleep(1)
-        log_msg = f"[{task_name}] progress: {i + 1}/{seconds} seconds"
+        log_msg = f"[{task_id}] progress: {i + 1}/{seconds} seconds"
         logs.append(log_msg)
         
         # 更新任务状态和进度
@@ -56,22 +56,31 @@ def GmonCell_batch_simu(self, seconds: int, task_name: str = "GmonCell_batch_sim
             }
         )
 
-    # 直接通过 WSL 挂载路径运行 Ansys 可执行并等待其退出（与之前 notepad 的调用方式一致）
+    # 使用 Windows Python 调用批处理脚本
     try:
-        # 从配置文件获取 HFSS 路径（自动转换为 WSL 格式）
-        win_exe = settings.hfss_path_wsl
-        proc = subprocess.run([win_exe], capture_output=True, text=True, check=False)
-        logs.append(f"Ran Ansys executable, returncode={proc.returncode}")
+        # 获取 Windows Python 路径（WSL 格式）
+        win_python = settings.windows_python_wsl
+        # 获取批处理脚本路径（WSL 格式）
+        script_path = settings.get_batch_script_path("GmonCell_batch_simu_gds_to_target.py")
+        
+        logs.append(f"Running script: {script_path} with task_id={task_id}")
+        
+        proc = subprocess.run(
+            [win_python, script_path, "--task_id", str(task_id)],
+            capture_output=True,
+            text=True,
+            check=False
+        )
+        logs.append(f"Script execution completed, returncode={proc.returncode}")
         if proc.stdout:
             logs.append(f"stdout: {proc.stdout}")
         if proc.stderr:
             logs.append(f"stderr: {proc.stderr}")
     except Exception as e:
-        logs.append(f"Could not run Ansys executable: {e}")
+        logs.append(f"Could not run batch script: {e}")
 
     return {
-        "task": task_name,
-        "task_id": self.request.id,  # Celery task_id（就是 task_name）
+        "task_id": task_id,
         "seconds": seconds,
         "logs": logs,
         "message": "Task completed successfully",

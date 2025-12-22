@@ -123,7 +123,7 @@ async def submit_task(
         
         # 4. 使用 task_id 作为 Celery 的 task_id，让 Celery 自己处理重复
         task = GmonCell_batch_simu.apply_async(
-            args=[10, task_id],
+            args=[10],  # 只需要传递 seconds 参数，task_id 在任务内部通过 self.request.id 获取
             task_id=task_id,
         )
         
